@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leo's Great Shark & Phonics Adventure</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Inter for clean, friendly typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+            color: #0f172a;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-fredoka {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        /* Large readable story text styling */
+        .story-text-container {
+            font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+            line-height: 1.6;
+            color: #0f172a;
+        }
+
+        .word-span {
+            display: inline-block;
+            padding: 0.1rem 0.25rem;
+            margin: 0.1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .word-span:hover {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            transform: scale(1.05);
+        }
+
+        .word-highlight {
+            background-color: #fef08a !important;
+            color: #0f172a !important;
+            font-weight: 800 !important;
+            transform: scale(1.12);
+            box-shadow: 0 4px 10px rgba(234, 179, 8, 0.4);
+            border-radius: 0.375rem;
+        }
+
+        .sentence-active {
+            background-color: #f0fdf4;
+            border-left: 6px solid #22c55e;
+            padding-left: 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Friendly 3D Button Shadows */
+        .btn-3d {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background-color: #0284c7;
+            color: white;
+            box-shadow: 0 6px 0 #0369a1;
+        }
+        .btn-primary:active {
+            box-shadow: 0 2px 0 #0369a1;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 6px 0 #047857;
+        }
+        .btn-success:active {
+            box-shadow: 0 2px 0 #047857;
+        }
+
+        .btn-amber {
+            background-color: #f59e0b;
+            color: white;
+            box-shadow: 0 6px 0 #b45309;
+        }
+        .btn-amber:active {
+            box-shadow: 0 2px 0 #b45309;
+        }
+
+        /* Pulse animation for key interaction targets */
+        @keyframes gentle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .pulse-gentle {
+            animation: gentle-pulse 2.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+    <!-- TOP Subtle Control Bar -->
+    <header class="bg-sky-900 text-white px-4 py-3 shadow-md border-b-4 border-sky-600 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🦈</span>
+                <h1 class="font-fredoka text-xl md:text-2xl font-bold tracking-wide text-sky-100">
+                    Leo's Great Shark Adventure
+                </h1>
+            </div>
+
+            <!-- Chapter Counter -->
+            <div class="flex items-center bg-sky-950/80 px-4 py-1.5 rounded-full border border-sky-500/40">
+                <span class="text-xs uppercase tracking-wider text-sky-300 font-bold mr-2">Chapter</span>
+                <span id="chapter-indicator" class="font-fredoka text-lg font-bold text-amber-300">1 / 19</span>
+            </div>
+
+            <!-- Voice Selector & Mute -->
+            <div class="flex items-center space-x-3">
+                <!-- Voice Select Dropdown -->
+                <div class="flex items-center space-x-1 bg-sky-800 px-2 py-1 rounded-lg border border-sky-600">
+                    <span class="text-sm">🎙️</span>
+                    <select id="voice-select" class="bg-transparent text-xs text-white outline-none cursor-pointer max-w-[140px] md:max-w-[200px] truncate" title="Teacher Voice Selector">
+                        <option value="" class="text-slate-900">Auto-Detecting Best Voice...</option>
+                    </select>
+                </div>
+
+                <!-- Sound Effects Toggle -->
+                <button id="sfx-toggle-btn" onclick="toggleSFX()" class="bg-sky-800 hover:bg-sky-700 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1 border border-sky-600">
+                    <span id="sfx-icon">🔊</span>
+                    <span id="sfx-text" class="hidden sm:inline">SFX On</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- SPLASH SCREEN OVERLAY (Audio Context & TTS Autoplay Unlock) -->
+    <div id="splash-modal" class="fixed inset-0 z-50 bg-sky-950/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl border-4 border-sky-400 relative overflow-hidden">
+            <div class="text-7xl mb-4 animate-bounce">🦈</div>
+            <h2 class="font-fredoka text-3xl md:text-4xl font-bold text-sky-900 mb-2">Welcome Explorer!</h2>
+            <p class="text-slate-600 text-lg mb-6 leading-relaxed">
+                Get ready for an awesome ocean story with fun shark facts and phonics games!
+            </p>
+
+            <!-- Name Input -->
+            <div class="mb-6 text-left">
+                <label for="student-name-input" class="block text-sm font-bold text-sky-900 uppercase tracking-wider mb-2">
+                    Enter Explorer's Name:
+                </label>
+                <input type="text" id="student-name-input" value="Leo" class="w-full px-4 py-3 text-xl rounded-xl border-2 border-sky-300 focus:border-sky-500 outline-none font-bold text-sky-900 text-center bg-sky-50/50">
+            </div>
+
+            <button onclick="startAdventure()" class="w-full btn-3d btn-success py-5 rounded-2xl text-2xl font-fredoka font-bold tracking-wide flex items-center justify-center space-x-3 pulse-gentle">
+                <span>▶ START ADVENTURE</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- LEFT COLUMN: STORY & HOTSPOTS (8 Cols on Desktop) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- MAIN STORY CARD -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-sky-200 relative">
+                
+                <!-- Chapter Header Banner -->
+                <div class="flex items-center justify-between border-b-2 border-sky-100 pb-4 mb-6">
+                    <h2 id="chapter-title" class="font-fredoka text-2xl sm:text-3xl font-bold text-sky-900">
+                        Chapter 1: Meet Leo
+                    </h2>
+                    <button onclick="speakCurrentSentenceOrPage()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 border border-amber-300 transition">
+                        <span class="text-lg">🔊</span>
+                        <span>Read Sentence</span>
+                    </button>
+                </div>
+
+                <!-- Story Text Display Area -->
+                <div id="story-text-box" class="story-text-container min-h-[180px] select-none font-medium">
+                    <!-- Interactive Words populated dynamically -->
+                </div>
+
+                <!-- Helpful Tip -->
+                <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400 flex items-center space-x-2">
+                    <span>💡</span>
+                    <span>Tap ANY word in the story to hear it spoken aloud!</span>
+                </div>
+            </div>
+
+            <!-- PICTURE HOTSPOTS & FUN FACTS -->
+            <div class="bg-sky-100/70 rounded-3xl p-5 border-2 border-sky-200 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-fredoka text-lg font-bold text-sky-900 flex items-center space-x-2">
+                        <span>🔍</span>
+                        <span>Tap Pictures to Discover Extra Shark Facts!</span>
+                    </h3>
+                </div>
+
+                <!-- Grid of 4 Hotspot Cards -->
+                <div id="hotspots-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <!-- Hotspots populated by JS -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: VISUAL ILLUSTRATION & LITERACY QUIZ (5 Cols on Desktop) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+
+            <!-- VISUAL ILLUSTRATION BOX -->
+            <div class="bg-gradient-to-b from-sky-200 to-blue-300 rounded-3xl p-6 shadow-xl border-4 border-white flex flex-col items-center justify-center min-h-[260px] relative overflow-hidden">
+                <!-- SVG Vector Canvas -->
+                <div id="illustration-container" class="w-full flex items-center justify-center">
+                    <!-- SVG populated dynamically -->
+                </div>
+            </div>
+
+            <!-- LITERACY & PHONICS QUIZ CARD -->
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-2 border-indigo-100 relative">
+                
+                <!-- Quiz Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <span class="bg-indigo-100 text-indigo-900 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-indigo-200 flex items-center space-x-1">
+                        <span>🧠</span>
+                        <span>Phonics & Literacy Quiz</span>
+                    </span>
+                    <button onclick="readQuizQuestion()" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 p-2 rounded-xl text-xs font-bold flex items-center space-x-1 border border-indigo-200">
+                        <span class="text-base">🔊</span>
+                        <span>Hear Question</span>
+                    </button>
+                </div>
+
+                <!-- Question Text -->
+                <p id="quiz-question-text" class="font-fredoka text-xl text-slate-800 mb-5 font-semibold leading-snug">
+                    Question loading...
+                </p>
+
+                <!-- Options List -->
+                <div id="quiz-options-container" class="space-y-3">
+                    <!-- Option buttons populated by JS -->
+                </div>
+
+                <!-- Feedback Banner -->
+                <div id="quiz-feedback" class="mt-4 p-3 rounded-2xl hidden font-fredoka text-center text-lg font-bold border-2">
+                    <!-- Dynamic feedback message -->
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- BOTTOM HUGE FRIENDLY CONTROL BAR -->
+    <footer class="bg-white border-t-4 border-sky-200 p-4 sticky bottom-0 z-40 shadow-2xl">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+            
+            <!-- BACK BUTTON -->
+            <button id="prev-btn" onclick="prevChapter()" class="btn-3d bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 sm:px-6 py-4 rounded-2xl text-lg sm:text-xl font-fredoka font-bold flex items-center space-x-2 border-2 border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed">
+                <span>⬅</span>
+                <span class="hidden sm:inline">BACK</span>
+            </button>
+
+            <!-- READ AGAIN BUTTON -->
+            <button id="read-again-btn" onclick="readCurrentPage()" class="btn-3d btn-amber px-5 sm:px-8 py-4 rounded-2xl text-lg sm:text-2xl font-fredoka font-bold flex items-center space-x-2">
+                <span class="text-xl">🔊</span>
+                <span>READ AGAIN</span>
+            </button>
+
+            <!-- NEXT PAGE BUTTON -->
+            <button id="next-btn" onclick="nextChapter()" class="btn-3d btn-success px-5 sm:px-8 py-4 rounded-2xl text-lg sm:text-2xl font-fredoka font-bold flex items-center space-x-2 pulse-gentle">
+                <span id="next-btn-text">NEXT PAGE</span>
+                <span>➡</span>
+            </button>
+
+        </div>
+    </footer>
+
+    <script>
+        let currentChapterIndex = 0;
+        let studentName = "Leo";
+        let isAudioUnlocked = false;
+        let sfxEnabled = true;
+        let selectedVoice = null;
+        let speechSynth = window.speechSynthesis;
+        let currentUtterance = null;
+        let isSpeaking = false;
+        let currentSentences = [];
+        let sentenceIndex = 0;
+        let sentencePauseTimeout = null;
+        let audioCtx = null;
+
+        /* Web Audio Synthesizer for Fun Sound Effects */
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!sfxEnabled) return;
+            initAudioContext();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'bubble') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'success') {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.3);
+                });
+            } else if (type === 'try-again') {
+                [350, 280].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.15 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.15);
+                    osc.stop(now + idx * 0.15 + 0.2);
+                });
+            } else if (type === 'radar') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        }
+
+        function toggleSFX() {
+            sfxEnabled = !sfxEnabled;
+            document.getElementById('sfx-icon').innerText = sfxEnabled ? '🔊' : '🔇';
+            document.getElementById('sfx-text').innerText = sfxEnabled ? 'SFX On' : 'SFX Off';
+        }
+
+        function loadVoices() {
+            if (!speechSynth) return;
+            const voices = speechSynth.getVoices();
+            const voiceSelect = document.getElementById('voice-select');
+            voiceSelect.innerHTML = '';
+
+            if (voices.length === 0) return;
+
+            // Prioritize high quality English voices
+            let preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Jenny') || v.name.includes('Karen') || v.name.includes('Daniel')));
+            if (!preferredVoice) {
+                preferredVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+            }
+
+            voices.forEach((v) => {
+                const option = document.createElement('option');
+                option.value = v.name;
+                option.textContent = `${v.name} (${v.lang})`;
+                option.className = "text-slate-900";
+                if (preferredVoice && v.name === preferredVoice.name) {
+                    option.selected = true;
+                    selectedVoice = v;
+                }
+                voiceSelect.appendChild(option);
+            });
+
+            voiceSelect.onchange = (e) => {
+                const v = voices.find(voice => voice.name === e.target.value);
+                if (v) selectedVoice = v;
+            };
+        }
+
+        if (speechSynthesis) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+        }
+
+        const storyChapters = [
+            {
+                ch: 1,
+                title: "Meet Leo & Ocean World",
+                story: "Hello explorer! Welcome to the big blue ocean. My name is {NAME}, and I love learning about sharks. Today we are going on an amazing underwater adventure together!",
+                hotspots: [
+                    { icon: "🌊", title: "Waves", text: "The ocean covers over 70 percent of our planet Earth!" },
+                    { icon: "🐠", title: "Fish", text: "Sharks have lived in the ocean for 400 million years!" },
+                    { icon: "🤿", title: "Snorkel", text: "You are an official Junior Marine Biologist today!" },
+                    { icon: "🦈", title: "Leo Shark", text: "Sharks do not have bones. Their skeletons are made of light cartilage!" }
+                ],
+                quiz: {
+                    q: "What is Leo's favorite thing to learn about in the ocean?",
+                    options: [
+                        { text: "Fast Cars", correct: false },
+                        { text: "Awesome Sharks", correct: true },
+                        { text: "Big Dinosaurs", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><path d="M10,100 Q50,70 100,100 T190,100" fill="none" stroke="#38bdf8" stroke-width="6"/><path d="M20,60 Q100,20 180,60 T10,60" fill="#0284c7"/><polygon points="90,30 110,10 120,35" fill="#0369a1"/><circle cx="140" cy="50" r="5" fill="#fff"/><circle cx="142" cy="50" r="2" fill="#000"/></svg>`
+            },
+            {
+                ch: 2,
+                title: "High Five Hands",
+                story: "Sharks use their smooth fins to glide safely through the water. Just like sharks keep their fins calm, we use our gentle high-five hands to keep ourselves and our friends safe and happy!",
+                hotspots: [
+                    { icon: "✋", title: "Gentle Hands", text: "Gentle hands help everyone in class feel happy and safe!" },
+                    { icon: "🤝", title: "High Five", text: "High fives spread kindness and great teamwork!" },
+                    { icon: "🛡️", title: "Safe Space", text: "Taking care of our body keeps us strong and calm." },
+                    { icon: "🐬", title: "Dolphin", text: "Dolphins love swimming near gentle, friendly friends!" }
+                ],
+                quiz: {
+                    q: "How do we use our hands to keep everyone safe?",
+                    options: [
+                        { text: "Gentle high-fives", correct: true },
+                        { text: "Rough pushing", correct: false },
+                        { text: "Throwing items", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="40" y="30" width="120" height="90" rx="20" fill="#38bdf8"/><text x="100" y="85" font-size="50" text-anchor="middle">✋</text></svg>`
+            },
+            {
+                ch: 3,
+                title: "The Gentle Giant Whale Shark",
+                story: "Look at that huge spotted fish! That is a Whale Shark. It is bigger than a school bus, but it is super gentle. It eats tiny floating plankton by scooping up water!",
+                hotspots: [
+                    { icon: "🚌", title: "School Bus", text: "Whale sharks can grow up to 40 feet long like a bus!" },
+                    { icon: "🦠", title: "Plankton", text: "Plankton are tiny microscopic creatures that float in water." },
+                    { icon: "💧", title: "Filter Gills", text: "They filter thousands of gallons of ocean water every hour!" },
+                    { icon: "🌟", title: "White Spots", text: "Every whale shark has a unique spot pattern like a fingerprint!" }
+                ],
+                quiz: {
+                    q: "What does the giant Whale Shark like to eat?",
+                    options: [
+                        { text: "Cheese Pizza", correct: false },
+                        { text: "Tiny Plankton", correct: true },
+                        { text: "Fruit Juice", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><path d="M20,80 Q100,30 180,70 Q120,110 20,80 Z" fill="#0369a1"/><circle cx="60" cy="70" r="3" fill="#fff"/><circle cx="90" cy="65" r="3" fill="#fff"/><circle cx="120" cy="75" r="3" fill="#fff"/><circle cx="150" cy="70" r="3" fill="#fff"/></svg>`
+            },
+            {
+                ch: 4,
+                title: "Phonics: The /SH/ Sound",
+                story: "Listen carefully! The words SHARK, SHELL, and SHIP all start with the special /SH/ sound. When S and H stand together, they say SHHH like a quiet ocean wave!",
+                hotspots: [
+                    { icon: "🦈", title: "Shark", text: "S-H-A-R-K starts with the SH sound!" },
+                    { icon: "🐚", title: "Shell", text: "S-H-E-L-L starts with the SH sound!" },
+                    { icon: "🚢", title: "Ship", text: "S-H-I-P starts with the SH sound!" },
+                    { icon: "🤫", title: "Quiet SH", text: "Letter S and Letter H together say SHHH!" }
+                ],
+                quiz: {
+                    q: "Which word starts with the /SH/ sound?",
+                    options: [
+                        { text: "Shell 🐚", correct: true },
+                        { text: "Dog 🐶", correct: false },
+                        { text: "Cat 🐱", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="30" y="30" width="140" height="90" rx="15" fill="#fef08a" stroke="#f59e0b" stroke-width="4"/><text x="100" y="85" font-size="42" font-weight="bold" fill="#0f172a" text-anchor="middle">S + H = SH</text></svg>`
+            },
+            {
+                ch: 5,
+                title: "The Hammerhead's 360 View",
+                story: "Check out this silly head shape! The Hammerhead shark has eyes on the sides of its wide head. This lets it see all around in 360 degrees, and it can even detect electrical signals from hidden stingrays!",
+                hotspots: [
+                    { icon: "🔨", title: "Wide Head", text: "Their wide head is called a cephalofoil!" },
+                    { icon: "👁️", title: "360 Vision", text: "They can see above and below them at the same time!" },
+                    { icon: "⚡", title: "Sensors", text: "Tiny dots on their nose detect tiny heartbeat electricity!" },
+                    { icon: "🏖️", title: "Sandy Floor", text: "Stingrays hide in sand, but hammerheads can find them!" }
+                ],
+                quiz: {
+                    q: "How does a Hammerhead shark's wide head help it?",
+                    options: [
+                        { text: "It sees 360 degrees all around", correct: true },
+                        { text: "It plays rock music", correct: false },
+                        { text: "It flies in the sky", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="30" y="60" width="140" height="25" rx="8" fill="#0284c7"/><path d="M80,72 Q100,110 120,72 Z" fill="#0369a1"/><circle cx="35" cy="72" r="5" fill="#fff"/><circle cx="165" cy="72" r="5" fill="#fff"/></svg>`
+            },
+            {
+                ch: 6,
+                title: "Deep Breaths Like Gills",
+                story: "Sharks take in fresh oxygen through their gills as water moves gently over them. When you feel upset or frustrated, you can take slow, deep breaths through your nose, just like shark gills taking in water!",
+                hotspots: [
+                    { icon: "🫁", title: "Deep Breath", text: "Inhale slowly through your nose for 3 seconds!" },
+                    { icon: "💨", title: "Slow Exhale", text: "Blow out slowly like ocean bubbles!" },
+                    { icon: "🌊", title: "Cool Ocean", text: "Breathing deeply calms your brain and body." },
+                    { icon: "💖", title: "Happy Heart", text: "You are in control of your calm body!" }
+                ],
+                quiz: {
+                    q: "What can you do when you feel frustrated or upset?",
+                    options: [
+                        { text: "Take slow deep breaths", correct: true },
+                        { text: "Scream loudly", correct: false },
+                        { text: "Run away", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><circle cx="100" cy="75" r="50" fill="#a7f3d0"/><text x="100" y="85" font-size="40" text-anchor="middle">🌬️</text></svg>`
+            },
+            {
+                ch: 7,
+                title: "Great White Shark Armor",
+                story: "The Great White Shark is covered in millions of tiny tooth-like scales called dermal denticles! This special skin acts like tough body armor and helps them swim without making a single sound.",
+                hotspots: [
+                    { icon: "🛡️", title: "Skin Armor", text: "Shark skin feels smooth one way and like sandpaper the other!" },
+                    { icon: "🦷", title: "Tooth Scales", text: "Denticles are tiny microscopic teeth on their skin!" },
+                    { icon: "🤫", title: "Silent Swimmer", text: "Their scales cut water friction so they swim silently!" },
+                    { icon: "🦷", title: "New Teeth", text: "Sharks can lose and regrow thousands of teeth in life!" }
+                ],
+                quiz: {
+                    q: "What is special about Great White shark skin scales?",
+                    options: [
+                        { text: "They are like tiny tough armor teeth", correct: true },
+                        { text: "They are soft cotton feathers", correct: false },
+                        { text: "They are sticky bubble gum", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><path d="M30,80 Q100,20 170,80 T30,80" fill="#475569"/><polygon points="100,20 115,45 85,45" fill="#334155"/></svg>`
+            },
+            {
+                ch: 8,
+                title: "Phonics: Rhyme Time with FIN",
+                story: "Let us play a rhyming game! A shark has a tall FIN. Rhyming words sound the same at the end. FIN rhymes with PIN, BIN, and WIN! Can you hear the IN sound?",
+                hotspots: [
+                    { icon: "🦈", title: "Shark Fin", text: "FIN ends with the -IN sound!" },
+                    { icon: "📌", title: "Safety Pin", text: "PIN rhymes with FIN!" },
+                    { icon: "🗑️", title: "Clean Bin", text: "BIN rhymes with FIN!" },
+                    { icon: "🏆", title: "Big Win", text: "WIN rhymes with FIN!" }
+                ],
+                quiz: {
+                    q: "Which word rhymes with FIN?",
+                    options: [
+                        { text: "WIN 🏆", correct: true },
+                        { text: "SUN ☀️", correct: false },
+                        { text: "HOP 🐇", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="20" y="25" width="160" height="100" rx="20" fill="#fed7aa"/><text x="100" y="85" font-size="34" font-weight="bold" fill="#7c2d12" text-anchor="middle">FIN = PIN = WIN</text></svg>`
+            },
+            {
+                ch: 9,
+                title: "The Super-Fast Mako Shark",
+                story: "Zoom! The Shortfin Mako is the fastest shark in the entire world! It can swim up to 45 miles per hour, bursting through the water like an underwater rocket ship!",
+                hotspots: [
+                    { icon: "🚀", title: "Rocket Speed", text: "Mako sharks swim up to 45 miles per hour!" },
+                    { icon: "🌊", title: "High Leaps", text: "Mako sharks can jump 20 feet high out of the water!" },
+                    { icon: "⚡", title: "Tail Power", text: "Their strong tail gives them super boost speed!" },
+                    { icon: "🎯", title: "Sleek Body", text: "Their streamlined body cuts right through waves!" }
+                ],
+                quiz: {
+                    q: "Why is the Shortfin Mako shark famous?",
+                    options: [
+                        { text: "It is the fastest swimmer in the sea", correct: true },
+                        { text: "It walks on land", correct: false },
+                        { text: "It sleeps in tall trees", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><path d="M10,75 L150,40 L190,75 L150,110 Z" fill="#2563eb"/><polygon points="70,55 90,20 110,50" fill="#1d4ed8"/></svg>`
+            },
+            {
+                ch: 10,
+                title: "Staying Calm in the Current",
+                story: "Sometimes ocean currents get noisy and fast, but smart sharks stay steady and focus on their path. When your classroom gets noisy, stay focused and keep your mind calm like a cool deep-sea shark!",
+                hotspots: [
+                    { icon: "🌀", title: "Fast Current", text: "Currents move water fast, but sharks stay strong!" },
+                    { icon: "🧘", title: "Calm Mind", text: "Focus on your own work and stay calm!" },
+                    { icon: "👂", title: "Noise Filter", text: "You can choose to pay attention to important sounds!" },
+                    { icon: "🎯", title: "Target Focus", text: "Focusing helps you finish your goals!" }
+                ],
+                quiz: {
+                    q: "What should you do when the room gets noisy or distracting?",
+                    options: [
+                        { text: "Stay focused and calm", correct: true },
+                        { text: "Make louder noise", correct: false },
+                        { text: "Throw pencils", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><circle cx="100" cy="75" r="55" fill="#bae6fd"/><text x="100" y="85" font-size="45" text-anchor="middle">🎯</text></svg>`
+            },
+            {
+                ch: 11,
+                title: "Glow-in-the-Dark Lanternsharks",
+                story: "Deep in the dark ocean where no sunlight reaches, tiny Velvet Belly Lanternsharks light up! They have special organs called photophores that glow with pretty green and blue light in the dark!",
+                hotspots: [
+                    { icon: "💡", title: "Glow Lights", text: "Bioluminescence is natural light made by living creatures!" },
+                    { icon: "🌑", title: "Deep Dark", text: "The deep ocean floor is pitch black!" },
+                    { icon: "🟢", title: "Green Light", text: "Lanternsharks use glow light to hide from big fish!" },
+                    { icon: "🔍", title: "Tiny Size", text: "Lanternsharks are smaller than a school ruler!" }
+                ],
+                quiz: {
+                    q: "How do Lanternsharks light up in the deep ocean?",
+                    options: [
+                        { text: "They glow with natural bioluminescent light", correct: true },
+                        { text: "They carry flashlights", correct: false },
+                        { text: "They turn on lamp switches", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="10" y="10" width="180" height="130" rx="15" fill="#0f172a"/><path d="M30,80 Q100,50 170,80" stroke="#4ade80" stroke-width="8" fill="none"/></svg>`
+            },
+            {
+                ch: 12,
+                title: "Phonics: Sight Word Hunt",
+                story: "Let us go on a sight word hunt! Look at these strong ocean words: BIG, CAN, SWIM, and SEE. These are superpower words that help you read amazing stories!",
+                hotspots: [
+                    { icon: "🔤", title: "Word BIG", text: "B-I-G spells BIG!" },
+                    { icon: "🔤", title: "Word CAN", text: "C-A-N spells CAN!" },
+                    { icon: "🔤", title: "Word SWIM", text: "S-W-I-M spells SWIM!" },
+                    { icon: "🔤", title: "Word SEE", text: "S-E-E spells SEE!" }
+                ],
+                quiz: {
+                    q: "Find the word that spells SWIM!",
+                    options: [
+                        { text: "SWIM", correct: true },
+                        { text: "CAT", correct: false },
+                        { text: "RED", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="20" y="20" width="160" height="110" rx="20" fill="#e0e7ff"/><text x="100" y="85" font-size="32" font-weight="bold" fill="#3730a3" text-anchor="middle">BIG • CAN • SWIM</text></svg>`
+            },
+            {
+                ch: 13,
+                title: "Shark Nursery Bays & Egg Purses",
+                story: "Mother sharks lay safe egg cases called Mermaid's Purses, or bring baby pups into shallow warm bays! These safe nurseries keep baby shark pups protected until they grow big and strong.",
+                hotspots: [
+                    { icon: "👛", title: "Egg Purse", text: "Egg cases anchor to sea kelp so they do not drift!" },
+                    { icon: "🦈", title: "Baby Pup", text: "Baby sharks are called pups!" },
+                    { icon: "🌿", title: "Seaweed", text: "Shallow bays protect tiny pups from big fish." },
+                    { icon: "🐣", title: "Hatching", text: "Inside the egg case, the pup eats a healthy yolk!" }
+                ],
+                quiz: {
+                    q: "What is a baby shark called?",
+                    options: [
+                        { text: "A Pup", correct: true },
+                        { text: "A Kitten", correct: false },
+                        { text: "A Chick", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><path d="M70,30 Q100,10 130,30 L140,110 Q100,130 60,110 Z" fill="#92400e"/><text x="100" y="80" font-size="30" text-anchor="middle">🐣</text></svg>`
+            },
+            {
+                ch: 14,
+                title: "Friendly Helpers",
+                story: "Sharks often swim with friendly Remora fish! Remoras clean the shark's skin, and the shark keeps them safe. Just like remoras and sharks help each other, asking teachers and friends for help makes us a great team!",
+                hotspots: [
+                    { icon: "🐟", title: "Remora Fish", text: "Remoras hitch a gentle ride on big sharks!" },
+                    { icon: "🤝", title: "Helping Hands", text: "Asking for help when you need it is super smart!" },
+                    { icon: "🏫", title: "Teamwork", text: "Working together makes big tasks easy!" },
+                    { icon: "💬", title: "Kind Words", text: "Saying please and thank you builds great friendships." }
+                ],
+                quiz: {
+                    q: "What is a smart thing to do when you need help learning?",
+                    options: [
+                        { text: "Ask a teacher or friend for help", correct: true },
+                        { text: "Hide under the desk", correct: false },
+                        { text: "Give up immediately", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><path d="M30,60 Q100,20 170,60" fill="none" stroke="#0284c7" stroke-width="12"/><path d="M60,90 Q110,70 160,90" fill="none" stroke="#f59e0b" stroke-width="6"/></svg>`
+            },
+            {
+                ch: 15,
+                title: "The Ancient Megalodon",
+                story: "Millions of years ago, a massive super-shark called Megalodon swam in the oceans! Its teeth were as big as a human hand! Today we can find cool Megalodon fossil teeth on beaches!",
+                hotspots: [
+                    { icon: "🦖", title: "Ancient Giant", text: "Megalodon lived millions of years ago!" },
+                    { icon: "🦴", title: "Giant Fossil", text: "A Megalodon tooth can be over 7 inches long!" },
+                    { icon: "🖐️", title: "Hand Sized", text: "One Megalodon tooth is bigger than your whole hand!" },
+                    { icon: "🔍", title: "Fossil Hunter", text: "People search for shiny black fossil teeth in riverbeds!" }
+                ],
+                quiz: {
+                    q: "How big was a tooth from the ancient Megalodon?",
+                    options: [
+                        { text: "As big as a human hand 🖐️", correct: true },
+                        { text: "As small as an ant 🐜", correct: false },
+                        { text: "Invisible 👻", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><polygon points="100,20 150,120 50,120" fill="#334155" stroke="#94a3b8" stroke-width="4"/><text x="100" y="90" font-size="20" fill="#fff" text-anchor="middle">FOSSIL</text></svg>`
+            },
+            {
+                ch: 16,
+                title: "Tiger Sharks Ocean Cleaners",
+                story: "Tiger sharks have dark stripes on their sides like a tiger cat! They are super curious and act as ocean cleaners by eating sick fish, keeping the coral reef healthy and balanced!",
+                hotspots: [
+                    { icon: "🐅", title: "Dark Stripes", text: "Young tiger sharks have stripes that fade as they grow!" },
+                    { icon: "🧹", title: "Ocean Cleaner", text: "They help keep ocean waters clean and healthy!" },
+                    { icon: "🪸", title: "Coral Reef", text: "Reefs need sharks to stay balanced and clean." },
+                    { icon: "👃", title: "Super Smell", text: "Sharks can smell one drop of scent in a giant pool!" }
+                ],
+                quiz: {
+                    q: "Why are Tiger Sharks important ocean cleaners?",
+                    options: [
+                        { text: "They keep ocean habitats healthy and balanced", correct: true },
+                        { text: "They use vacuum cleaners", correct: false },
+                        { text: "They mop the ocean floor", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><path d="M20,75 Q100,25 180,75 T20,75" fill="#d97706"/><line x1="70" y1="50" x2="70" y2="90" stroke="#78350f" stroke-width="4"/><line x1="100" y1="45" x2="100" y2="95" stroke="#78350f" stroke-width="4"/><line x1="130" y1="50" x2="130" y2="90" stroke="#78350f" stroke-width="4"/></svg>`
+            },
+            {
+                ch: 17,
+                title: "Phonics: Beginning Sounds",
+                story: "Let us match beginning sounds! Listen to the first letter sound of S-S-SHARK and F-F-FIN. The letter S makes the SSS sound, and the letter F makes the FFF sound!",
+                hotspots: [
+                    { icon: "🐍", title: "Letter S", text: "S makes the SSS sound like Snake and Shark!" },
+                    { icon: "🎏", title: "Letter F", text: "F makes the FFF sound like Fin and Fish!" },
+                    { icon: "🌊", title: "Sound Match", text: "Listening to first sounds helps us read words!" },
+                    { icon: "🎵", title: "Sound Song", text: "S-S-Shark and F-F-Fin!" }
+                ],
+                quiz: {
+                    q: "What letter makes the first sound in F-F-FIN?",
+                    options: [
+                        { text: "Letter F 🎏", correct: true },
+                        { text: "Letter M 🐒", correct: false },
+                        { text: "Letter B 🏀", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="30" y="25" width="140" height="100" rx="20" fill="#fbcfe8"/><text x="100" y="85" font-size="40" font-weight="bold" fill="#9d174d" text-anchor="middle">S & F Sounds</text></svg>`
+            },
+            {
+                ch: 18,
+                title: "Protecting Ocean Friends",
+                story: "Sharks and ocean animals need clean, safe water to live in. We can protect our sea friends by keeping trash out of the water, being gentle to living things, and sharing our love for ocean science!",
+                hotspots: [
+                    { icon: "♻️", title: "Clean Ocean", text: "Recycling keeps trash out of sea animal homes!" },
+                    { icon: "🐢", title: "Sea Turtle", text: "Turtles love clean ocean reefs too!" },
+                    { icon: "💙", title: "Gentle Care", text: "Loving nature makes you a great eco-hero!" },
+                    { icon: "📚", title: "Share Science", text: "Teaching others helps protect sharks!" }
+                ],
+                quiz: {
+                    q: "How can we help keep ocean animals safe?",
+                    options: [
+                        { text: "Keep trash out of the ocean and care for nature", correct: true },
+                        { text: "Throw plastic into the sea", correct: false },
+                        { text: "Ignore the animals", correct: false }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><circle cx="100" cy="75" r="50" fill="#60a5fa"/><text x="100" y="85" font-size="40" text-anchor="middle">🌍</text></svg>`
+            },
+            {
+                ch: 19,
+                title: "Junior Marine Biologist Certificate!",
+                story: "CONGRATULATIONS EXPLORER! You completed all 19 chapters of Leo's Great Shark Adventure! You learned amazing shark facts, practiced your phonics, and showed gentle, focused behavior!",
+                hotspots: [
+                    { icon: "🎓", title: "Official Badge", text: "You are now an Official Junior Marine Biologist!" },
+                    { icon: "🏆", title: "Gold Trophy", text: "Super Shark Scholar Award!" },
+                    { icon: "🎉", title: "Confetti", text: "Hip Hip Hooray for amazing reading!" },
+                    { icon: "📜", title: "Certificate", text: "You completed the entire ocean adventure!" }
+                ],
+                quiz: {
+                    q: "Are you proud of your amazing reading and shark learning today?",
+                    options: [
+                        { text: "YES! I am a Super Marine Biologist! 🌟", correct: true },
+                        { text: "ABSOLUTELY! 🦈", correct: true }
+                    ]
+                },
+                svg: `<svg viewBox="0 0 200 150" class="w-48 h-36"><rect x="10" y="10" width="180" height="130" rx="15" fill="#fef08a" stroke="#f59e0b" stroke-width="6"/><text x="100" y="60" font-size="20" font-weight="bold" fill="#78350f" text-anchor="middle">OFFICIAL CERTIFICATE</text><text x="100" y="100" font-size="40" text-anchor="middle">🎓🏆🌟</text></svg>`
+            }
+        ];
+
+
+        function startAdventure() {
+            const input = document.getElementById('student-name-input').value.trim();
+            if (input) studentName = input;
+            
+            initAudioContext();
+            isAudioUnlocked = true;
+
+            document.getElementById('splash-modal').classList.add('hidden');
+            loadChapter(0);
+        }
+
+        function loadChapter(index) {
+            if (index < 0 || index >= storyChapters.length) return;
+            currentChapterIndex = index;
+
+            stopSpeech();
+
+            const chapter = storyChapters[index];
+            document.getElementById('chapter-indicator').innerText = `${chapter.ch} / ${storyChapters.length}`;
+            document.getElementById('chapter-title').innerText = `Chapter ${chapter.ch}: ${chapter.title}`;
+            
+            // Render story text with word-by-word span tags
+            const processedText = chapter.story.replace(/{NAME}/g, studentName);
+            renderStoryText(processedText);
+
+            // Render Hotspots
+            renderHotspots(chapter.hotspots);
+
+            // Render SVG Illustration
+            document.getElementById('illustration-container').innerHTML = chapter.svg;
+
+            // Render Quiz
+            renderQuiz(chapter.quiz);
+
+            // Update Back Button state
+            document.getElementById('prev-btn').disabled = (index === 0);
+
+            // Update Next Button Text
+            const nextBtnText = document.getElementById('next-btn-text');
+            if (index === storyChapters.length - 1) {
+                nextBtnText.innerText = "FINISH!";
+            } else {
+                nextBtnText.innerText = "NEXT PAGE";
+            }
+
+            // Play navigation sound effect
+            playSound('bubble');
+
+            // Automatic page reading upon page turn
+            if (isAudioUnlocked) {
+                setTimeout(() => {
+                    readCurrentPage();
+                }, 400);
+            }
+        }
+
+        function renderStoryText(text) {
+            const storyBox = document.getElementById('story-text-box');
+            storyBox.innerHTML = '';
+
+            // Split story into sentences using punctuation
+            currentSentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+
+            let globalWordIndex = 0;
+
+            currentSentences.forEach((sentenceText, sIdx) => {
+                const sentenceSpan = document.createElement('span');
+                sentenceSpan.id = `sentence-${sIdx}`;
+                sentenceSpan.className = 'sentence-block inline';
+
+                const words = sentenceText.trim().split(/\s+/);
+                words.forEach((word) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word-span';
+                    wordSpan.innerText = word + ' ';
+                    wordSpan.dataset.wordIndex = globalWordIndex;
+                    wordSpan.dataset.cleanWord = word.replace(/[^a-zA-Z0-9]/g, '');
+                    
+                    wordSpan.onclick = (e) => {
+                        e.stopPropagation();
+                        speakSingleWord(wordSpan.dataset.cleanWord, wordSpan);
+                    };
+
+                    sentenceSpan.appendChild(wordSpan);
+                    globalWordIndex++;
+                });
+
+                storyBox.appendChild(sentenceSpan);
+            });
+        }
+
+        function renderHotspots(hotspots) {
+            const grid = document.getElementById('hotspots-grid');
+            grid.innerHTML = '';
+
+            hotspots.forEach((spot) => {
+                const card = document.createElement('button');
+                card.className = "bg-white hover:bg-sky-50 rounded-2xl p-3 border-2 border-sky-200 shadow-sm flex flex-col items-center text-center transition transform hover:-translate-y-1 btn-3d";
+                card.innerHTML = `
+                    <span class="text-3xl mb-1">${spot.icon}</span>
+                    <span class="font-fredoka text-xs font-bold text-sky-950">${spot.title}</span>
+                `;
+                card.onclick = () => {
+                    playSound('radar');
+                    speakText(spot.text);
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        function renderQuiz(quiz) {
+            document.getElementById('quiz-question-text').innerText = quiz.q;
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+
+            const feedbackBox = document.getElementById('quiz-feedback');
+            feedbackBox.className = 'mt-4 p-3 rounded-2xl hidden font-fredoka text-center text-lg font-bold border-2';
+
+            quiz.options.forEach((opt, idx) => {
+                const optBtn = document.createElement('div');
+                optBtn.className = "bg-slate-50 hover:bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3 flex items-center justify-between cursor-pointer transition btn-3d";
+                
+                optBtn.innerHTML = `
+                    <span class="font-fredoka text-lg text-indigo-950 font-semibold">${opt.text}</span>
+                    <button class="speak-opt-btn bg-indigo-100 hover:bg-indigo-200 text-indigo-800 p-2 rounded-xl text-sm font-bold border border-indigo-300">
+                        🔊
+                    </button>
+                `;
+
+                // Hear option text on speaker button click
+                const speakBtn = optBtn.querySelector('.speak-opt-btn');
+                speakBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    speakText(opt.text);
+                };
+
+                // Choice selection click
+                optBtn.onclick = () => {
+                    checkQuizAnswer(opt.correct, feedbackBox);
+                };
+
+                container.appendChild(optBtn);
+            });
+        }
+
+        function readQuizQuestion() {
+            const ch = storyChapters[currentChapterIndex];
+            if (ch && ch.quiz) {
+                speakText(ch.quiz.q);
+            }
+        }
+
+        function checkQuizAnswer(isCorrect, feedbackBox) {
+            feedbackBox.classList.remove('hidden');
+            if (isCorrect) {
+                playSound('success');
+                feedbackBox.className = "mt-4 p-4 rounded-2xl font-fredoka text-center text-lg font-bold border-2 bg-emerald-100 border-emerald-400 text-emerald-900";
+                feedbackBox.innerHTML = "🌟 Super Shark Thinker! Great Job!";
+                speakText("Super Shark Thinker! Great Job!");
+            } else {
+                playSound('try-again');
+                feedbackBox.className = "mt-4 p-4 rounded-2xl font-fredoka text-center text-lg font-bold border-2 bg-amber-100 border-amber-400 text-amber-900";
+                feedbackBox.innerHTML = "🌊 Give it another try! You can do it!";
+                speakText("Give it another try! You can do it!");
+            }
+        }
+
+        function readCurrentPage() {
+            stopSpeech();
+            sentenceIndex = 0;
+            speakNextSentence();
+        }
+
+        function speakNextSentence() {
+            if (sentenceIndex >= currentSentences.length) {
+                clearWordHighlights();
+                return;
+            }
+
+            const sentenceText = currentSentences[sentenceIndex].trim();
+            if (!sentenceText) return;
+
+            // Highlight sentence container
+            highlightSentence(sentenceIndex);
+
+            const utterance = new SpeechSynthesisUtterance(sentenceText);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.88; // Slightly relaxed pace for young learners
+            utterance.pitch = 1.05;
+
+            // Real-Time Word Highlighting via Boundary Events
+            utterance.onboundary = (event) => {
+                if (event.name === 'word') {
+                    highlightWordAtOffset(sentenceIndex, event.charIndex);
+                }
+            };
+
+            utterance.onend = () => {
+                clearWordHighlights();
+                sentenceIndex++;
+                // 1.2 Second Pause between sentences
+                sentencePauseTimeout = setTimeout(() => {
+                    speakNextSentence();
+                }, 1200);
+            };
+
+            utterance.onerror = () => {
+                clearWordHighlights();
+            };
+
+            currentUtterance = utterance;
+            speechSynth.speak(utterance);
+        }
+
+        function speakCurrentSentenceOrPage() {
+            readCurrentPage();
+        }
+
+        function speakSingleWord(word, wordElement) {
+            stopSpeech();
+            clearWordHighlights();
+            wordElement.classList.add('word-highlight');
+
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.85;
+
+            utterance.onend = () => {
+                wordElement.classList.remove('word-highlight');
+            };
+
+            speechSynth.speak(utterance);
+        }
+
+        function speakText(text) {
+            stopSpeech();
+            const utterance = new SpeechSynthesisUtterance(text);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9;
+            speechSynth.speak(utterance);
+        }
+
+        function stopSpeech() {
+            if (sentencePauseTimeout) {
+                clearTimeout(sentencePauseTimeout);
+                sentencePauseTimeout = null;
+            }
+            if (speechSynth) {
+                speechSynth.cancel();
+            }
+            clearWordHighlights();
+        }
+
+        function highlightSentence(sIdx) {
+            document.querySelectorAll('.sentence-block').forEach(el => el.classList.remove('sentence-active'));
+            const sEl = document.getElementById(`sentence-${sIdx}`);
+            if (sEl) {
+                sEl.classList.add('sentence-active');
+            }
+        }
+
+        function highlightWordAtOffset(sIdx, charIndex) {
+            const sEl = document.getElementById(`sentence-${sIdx}`);
+            if (!sEl) return;
+
+            const wordSpans = sEl.querySelectorAll('.word-span');
+            let currentCharCount = 0;
+
+            wordSpans.forEach(span => {
+                span.classList.remove('word-highlight');
+                const textLength = span.innerText.length;
+
+                if (charIndex >= currentCharCount && charIndex < currentCharCount + textLength) {
+                    span.classList.add('word-highlight');
+                }
+                currentCharCount += textLength;
+            });
+        }
+
+        function clearWordHighlights() {
+            document.querySelectorAll('.word-span').forEach(span => span.classList.remove('word-highlight'));
+            document.querySelectorAll('.sentence-block').forEach(el => el.classList.remove('sentence-active'));
+        }
+
+        function nextChapter() {
+            if (currentChapterIndex < storyChapters.length - 1) {
+                loadChapter(currentChapterIndex + 1);
+            } else {
+                // Completed all chapters
+                playSound('success');
+                alert("🎉 Hip Hip Hooray! You completed Leo's Great Shark Adventure!");
+            }
+        }
+
+        function prevChapter() {
+            if (currentChapterIndex > 0) {
+                loadChapter(currentChapterIndex - 1);
+            }
+        }
+
+        // Initialize default view
+        window.onload = () => {
+            loadVoices();
+        };
+    </script>
+</body>
+</html>
